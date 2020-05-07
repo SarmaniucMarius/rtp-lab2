@@ -1,0 +1,9 @@
+{application,legacy_sensors,
+             [{applications,[kernel,stdlib,elixir,logger,elixir_xml_to_map]},
+              {description,"legacy_sensors"},
+              {modules,['Elixir.Fetcher','Elixir.LegacySensors_Processor',
+                        'Elixir.Main','Elixir.Scheduler',
+                        'Elixir.WorkersSupervisor']},
+              {registered,[]},
+              {vsn,"0.1.0"},
+              {mod,{'Elixir.Main',[0,0]}}]}.

@@ -1,0 +1,13 @@
+{application,unicode_util_compat,
+             [{description,"An OTP library"},
+              {vsn,"0.2.0"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {env,[]},
+              {modules,[unicode_util_compat]},
+              {maintainers,["Benoit Chesneau"]},
+              {licenses,["Apache 2.0"]},
+              {links,[{"Github",
+                       "https://github.com/benoitc/unicode_util_compat"}]},
+              {files,["src","uc_spec","rebar.config","rebar.config.script",
+                      "README.md","LICENSE"]}]}.

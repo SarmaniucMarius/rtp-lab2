@@ -1,5 +1,6 @@
 {application,legacy_sensors,
-             [{applications,[kernel,stdlib,elixir,logger,elixir_xml_to_map]},
+             [{applications,[kernel,stdlib,elixir,logger,poison,sweet_xml,
+                             eventsource_ex]},
               {description,"legacy_sensors"},
               {modules,['Elixir.Fetcher','Elixir.LegacySensors_Processor',
                         'Elixir.Main','Elixir.Scheduler',

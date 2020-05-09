@@ -14,7 +14,6 @@ defmodule Main.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      applications: [:elixir_xml_to_map],
       extra_applications: [:logger],
       mod: {Main, [0, 0]}
     ]
@@ -25,7 +24,7 @@ defmodule Main.MixProject do
     [
       {:eventsource_ex, "~> 0.0.2"},
       {:poison, "~> 3.1"},
-      {:elixir_xml_to_map, "~> 1.0"}
+      {:sweet_xml, "~> 0.6.5"},
     ]
   end
 end

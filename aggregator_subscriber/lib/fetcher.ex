@@ -1,15 +1,9 @@
 defmodule Fetcher do
   require Logger
 
-  def start(port) do
+  def start(socket) do
     Logger.info("Fetcher starting")
-    opts = [:binary, active: false]
-    socket = case :gen_udp.open(port, opts) do
-      {:ok, socket} -> socket
-      {:error, reason} ->
-        Logger.info("Could not open UDP port! Reason: #{reason}")
-        Process.exit(self(), reason)
-    end
+    send_notification(socket, 'localhost', 4050, "iot/sensors/legacy_sensors")
     pid = spawn_link(__MODULE__, :get_messages, [socket])
     {:ok, pid}
   end
@@ -26,7 +20,9 @@ defmodule Fetcher do
   def get_messages(socket) do
     case :gen_tcp.recv(socket, 0) do
       {:ok, data} ->
-        IO.inspect(data)
+        message = elem(data, 2)
+        decoded_message = Poison.decode!(message)
+        Aggregator.add_message(decoded_message)
       {:error, reason} ->
         Logger.info("recv error in Fetcher get_message! Reason #{reason}")
     end

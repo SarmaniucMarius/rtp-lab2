@@ -16,8 +16,6 @@ defmodule Fetcher do
         worker = elem(workers, id)
         IOT_processor.process_event(worker, msg.data)
 
-        # Process.sleep(1000)
-
         id
     end
     recv(id+1)

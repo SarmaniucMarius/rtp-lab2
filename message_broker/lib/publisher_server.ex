@@ -25,20 +25,4 @@ defmodule PublisherServer do
     end
     loop_acceptor(socket)
   end
-
-  def server(socket) do
-    case :gen_tcp.recv(socket, 0) do
-      {:ok, data} ->
-        String.split(data, "!", trim: true)
-        |> Enum.map(fn msg ->
-          publisher_data = Poison.decode!(msg)
-          Queue.add_topic(Queue, publisher_data)
-        end)
-      {:error, _reason} ->
-        :gen_tcp.close(socket)
-        Process.exit(self(), :normal)
-    end
-
-    server(socket)
-  end
 end

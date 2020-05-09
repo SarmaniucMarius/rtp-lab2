@@ -15,8 +15,8 @@ defmodule Queue do
 
   @impl true
   def init(_) do
-    # Process.send_after(self(), :debug, 1000)
-    {:ok, %{iot: [], sensors: []}}
+    Process.send_after(self(), :debug, 1000)
+    {:ok, %{}}
   end
 
   @impl true
@@ -28,35 +28,19 @@ defmodule Queue do
 
   @impl true
   def handle_cast({:add, publisher_data}, state) do
-    iot_data = state[:iot]
-    sensors_data = state[:sensors]
+    topic = publisher_data["topic"]
+    current_data = Map.get(state, topic, [])
+    new_state = Map.put(state, topic, current_data ++ [publisher_data])
 
-    state = case publisher_data["topic"] do
-      "iot" ->
-        data = %{
-          pressure: publisher_data["pressure"],
-          wind: publisher_data["wind"],
-          time: publisher_data["unix_timestamp_100us"]
-        }
-        Map.put(state, :iot, iot_data ++ [data])
-      "sensors" ->
-        data = %{
-          light: publisher_data["light"],
-          time: publisher_data["unix_timestamp_100us"]
-        }
-        Map.put(state, :sensors, sensors_data ++ [data])
-    end
-
-    {:noreply, state}
+    {:noreply, new_state}
   end
 
   @impl true
   def handle_call({:get_messages, topic}, _from, state) do
-    topic_atom = String.to_atom(topic)
     {
       :reply,
-      Map.get(state, topic_atom),
-      Map.put(state, topic_atom, [])
+      Map.get(state, topic),
+      Map.put(state, topic, [])
     }
   end
 end

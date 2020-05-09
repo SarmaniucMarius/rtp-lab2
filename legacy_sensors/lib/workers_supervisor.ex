@@ -11,10 +11,10 @@ defmodule WorkersSupervisor do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
-  def start_child(name) do
+  def start_child(name, socket) do
     spec = %{
       id: LegacySensors_Processor,
-      start: {LegacySensors_Processor, :start_link, [name]},
+      start: {LegacySensors_Processor, :start_link, [name, socket]},
       restart: :temporary
     }
     DynamicSupervisor.start_child(__MODULE__, spec)

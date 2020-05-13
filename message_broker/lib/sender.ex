@@ -44,6 +44,11 @@ defmodule Sender do
         end
       end)
     end)
+    Enum.each(state, fn {_host_info, topics} ->
+      Enum.each(topics, fn topic ->
+        Queue.clear_messages(topic)
+      end)
+    end)
     {:noreply, state}
   end
 

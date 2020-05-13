@@ -11,67 +11,62 @@ defmodule Aggregator do
 
   @impl true
   def init(socket) do
-    Process.send_after(self(), :aggregate, 10000)
-    {:ok, {%{}, socket}}
-  end
-
-  @impl true
-  def handle_info(:aggregate, state) do
-    messages = elem(state, 0)
-    socket = elem(state, 1)
-
-    iot_messages = Map.get(messages, "iot", [])
-    sensors_messages = Map.get(messages, "sensors", [])
-    legacy_sensors_messages = Map.get(messages, "legacy_sensors", [])
-
-    aggregated_messages = Enum.map(iot_messages, fn iot_message ->
-      iot_timestamp = iot_message["unix_timestamp_100us"]
-      sensors_message = Enum.find(sensors_messages, fn sensors_message ->
-        sensors_timestamp = sensors_message["unix_timestamp_100us"]
-        ((iot_timestamp - sensors_timestamp) <= 100) &&
-        ((iot_timestamp - sensors_timestamp) >= -100)
-      end)
-      legacy_sensors_message = Enum.find(legacy_sensors_messages, fn sensors_message ->
-        legeacy_sensors_timestamp = sensors_message["unix_timestamp_100us"]
-        ((iot_timestamp - legeacy_sensors_timestamp) <= 100) &&
-        ((iot_timestamp - legeacy_sensors_timestamp) >= -100)
-      end)
-      if (sensors_message != nil)
-      && (legacy_sensors_message != nil) do
-        %{
-          pressure: iot_message["pressure"],
-          wind: iot_message["wind"],
-          light: sensors_message["light"],
-          humidity: legacy_sensors_message["humidity"],
-          temperature: legacy_sensors_message["temperature"],
-          unix_timestamp_100us: legacy_sensors_message["unix_timestamp_100us"],
-          topic: "aggregator"
-        }
-      else
-        nil
-      end
-    end)
-
-    if aggregated_messages != nil do
-      Enum.each(aggregated_messages, fn message ->
-        if message != nil do
-          :gen_udp.send(socket, '127.0.0.1', 4040, Poison.encode!(message))
-        end
-      end)
-    end
-
     Process.send_after(self(), :aggregate, 1000)
-    {:noreply, {%{}, socket}}
+    {:ok, {socket, []}}
   end
 
   @impl true
   def handle_cast({:add_message, message}, state) do
-    messages = elem(state, 0)
-    socket = elem(state, 1)
+    socket = elem(state, 0)
+    messages = elem(state, 1)
+    {:noreply, {socket, messages ++ [message]}}
+  end
 
-    topic = message["topic"]
-    current_messages = Map.get(messages, topic, [])
-    new_state = Map.put(messages, topic, current_messages ++ [message])
-    {:noreply, {new_state, socket}}
+  @impl true
+  def handle_info(:aggregate, state) do
+    socket = elem(state, 0)
+    messages = elem(state, 1)
+
+    if length(messages) > 0 do
+      forcast = Enum.map(messages, fn message -> message["forcast"] end) |>
+        Enum.frequencies |>
+        Map.to_list |>
+        Enum.sort_by(&(elem(&1, 1)), :desc) |> hd |> elem(0)
+
+      most_frequent_messages = Enum.filter(messages, fn message ->
+        message["forcast"] === forcast
+      end)
+      time = hd(most_frequent_messages)["unix_timestamp_100us"]
+      humidity = sum(most_frequent_messages, "humidity") / length(most_frequent_messages)
+      light = sum(most_frequent_messages, "light") / length(most_frequent_messages)
+      pressure = sum(most_frequent_messages, "pressure") / length(most_frequent_messages)
+      temperature = sum(most_frequent_messages, "temperature") / length(most_frequent_messages)
+      wind = sum(most_frequent_messages, "wind") / length(most_frequent_messages)
+
+      weather = %{
+        forcast: forcast,
+        humidity: humidity,
+        light: light,
+        pressure: pressure,
+        temperature: temperature,
+        wind: wind,
+        unix_timestamp_100us: time,
+        topic: "aggregator",
+      }
+
+      :gen_udp.send(socket, '127.0.0.1', 4040, Poison.encode!(weather))
+      IO.puts("Aggregated and sent!")
+    end
+
+
+
+    Process.send_after(self(), :aggregate, 1000)
+    {:noreply, {socket, messages}}
+  end
+
+  defp sum(messages, key) do
+    Enum.reduce(messages, 0, fn message, acc ->
+      message[key] + acc
+    end)
   end
 end

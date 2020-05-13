@@ -21,6 +21,7 @@ defmodule SubscriberServer do
       {:ok, data} ->
         subscriber = {elem(data, 0), elem(data, 1)}
         topics = elem(data, 2) |> String.split("/", trim: true)
+        Logger.info("Recieved notification: #{topics}")
         Sender.update_subscriber_topics(subscriber, topics)
       {:error, reason} ->
         Logger.info("Recv error! Reason: #{reason}")

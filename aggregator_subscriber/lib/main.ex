@@ -3,7 +3,7 @@ defmodule Main do
   require Logger
 
   def start(_, _) do
-    port = 4051
+    port = 4053
     opts = [:binary, active: false]
     socket = case :gen_udp.open(port, opts) do
       {:ok, socket} -> socket
@@ -14,13 +14,13 @@ defmodule Main do
 
     children = [
       %{
-        id: Fetcher,
-        start: {Fetcher, :start, [socket]}
+        id: Connection,
+        start: {Connection, :start, [socket]}
       },
       %{
         id: Aggregator,
         start: {Aggregator, :start_link, [socket]}
-      },
+      }
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]

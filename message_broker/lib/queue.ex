@@ -13,15 +13,19 @@ defmodule Queue do
     GenServer.call(__MODULE__, {:get_messages, topic})
   end
 
+  def clear_messages(topic) do
+    GenServer.cast(__MODULE__, {:clear_messages, topic})
+  end
+
   @impl true
   def init(_) do
-    Process.send_after(self(), :debug, 1000)
+    # Process.send_after(self(), :debug, 1000)
     {:ok, %{}}
   end
 
   @impl true
   def handle_info(:debug, state) do
-    IO.inspect(state)
+    IO.inspect(Map.keys(state))
     Process.send_after(self(), :debug, 1000)
     {:noreply, state}
   end
@@ -40,7 +44,12 @@ defmodule Queue do
     {
       :reply,
       Map.get(state, topic),
-      Map.put(state, topic, [])
+      state
     }
+  end
+
+  @impl true
+  def handle_cast({:clear_messages, topic}, state) do
+    {:noreply, Map.put(state, topic, [])}
   end
 end
